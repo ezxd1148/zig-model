@@ -1,6 +1,7 @@
-# ZigVisor AI
+<h1 align="center">ZigVisor AI</h1>
 
 ![Banner](widgets/github-header-banner.png)
+
 
 <div align="center">
 <h1 align="center" style="color: blue, font-size: 28px, margin: 10px 0;">A Fine-tuned AI model that specializes in Zig Programming Language</h1>
