@@ -11,11 +11,11 @@
 
 ## What is it?
 
-ZigVisor AI is an AI model that is fine-tuned using *AMD Instict MI300X* as part of AMD Developer Hackathon. The name itself is just Zig Advisor combined. It is fine-tuned using LoRA (Low-Rank Adaptation) (Dont forget to change) on top of the base model which is small Qwen(Dont forget to change).
+ZigVisor AI is an AI model that is fine-tuned using *AMD Instict MI300X* as part of AMD Developer Hackathon. The name itself is just Zig Advisor combined. It is fine-tuned using QLoRA (Low-Rank Adaptation) (Dont forget to change) on top of the base model which is small Qwen(Dont forget to change).
 
 ## How does it work?
 
-We used raw data from Hugging Face which is called "the stack v1" by bigcode (a collection of open-source datasets) to fine-tune the model. The raw data is then processed and cleaned through a series of filtering and formatting steps before being fed into generative AI models (in this case we used Hy3-preview from openrouter) to generate instruction. The instruction is then used to fine-tune the model using LoRA on top of Qwen (here) as out base model. We were lucky to be handed an opportunity to use *AMD Instict MI300X* as part of AMD Developer Hackathon. It was a great opportunity to learn and work with cutting-edge hardware and AI technologies.
+We used raw data from Hugging Face which is called "the stack v1" by bigcode (a collection of open-source datasets) to fine-tune the model. The raw data is then processed and cleaned through a series of filtering and formatting steps before being fed into generative AI models (in this case we used Hy3-preview from openrouter) to generate instruction. The instruction is then used to fine-tune the model using QLoRA on top of Qwen (here) as out base model. We were lucky to be handed an opportunity to use *AMD Instict MI300X* as part of AMD Developer Hackathon. It was a great opportunity to learn and work with cutting-edge hardware and AI technologies.
 
 We used nanana as our frontend and python FastAPI as our backend. This enables seamless communication between the frontend and backend, allowing users to interact with the model through a user-friendly interface.
 
