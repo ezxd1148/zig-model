@@ -2,6 +2,13 @@
 
 ![Banner](widgets/github-header-banner.png)
 
+<p align="center">
+    <img alt="GitHub contributors" src="https://img.shields.io/github/contributors-anon/ezxd1148/zig-model">
+    <img alt="GitHub commit activity" src="https://img.shields.io/github/commit-activity/t/ezxd1148/zig-model">
+    <img alt="GitHub Created At" src="https://img.shields.io/github/created-at/ezxd1148/zig-model">
+    <img alt="GitHub top language" src="https://img.shields.io/github/languages/top/ezxd1148/zig-model">
+    <img alt="GitHub License" src="https://img.shields.io/github/license/ezxd1148/zig-model">
+</p>
 
 <div align="center">
 <h1 align="center" style="color: blue, font-size: 28px, margin: 10px 0;">A Fine-tuned AI model that specializes in Zig Programming Language</h1>
