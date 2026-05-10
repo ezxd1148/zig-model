@@ -10,16 +10,18 @@ import time
 import requests
 from dotenv import load_dotenv
 
+load_dotenv()
+openrouter_token = os.getenv("OPENROUTER_TOKEN")
+base_model = os.getenv("BASE_MODEL")
+
 # Config
 BASE_DELAY = 1.0  # Base seconds between API calls
 MAX_RETRIES = 3  # Maximum retries per request
 OUTPUT_FILE = "../data/instruct/zig_instruct_data.jsonl"
 INPUT_FILE = "../data/cleaned/zig_cleaned_data.jsonl"
-MODEL = "tencent/hy3-preview:free"
+MODEL = base_model
 API_BASE_URL = "https://openrouter.ai/api/v1"
 
-load_dotenv()
-openrouter_token = os.getenv("OPENROUTER_TOKEN")
 
 if not openrouter_token:
     raise ValueError("OPENROUTER_TOKEN not found in environment variables")
