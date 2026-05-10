@@ -1,6 +1,9 @@
 """
 gen_instruct.py
 This script will generate instruction-following examples from the cleaned data.
+
+Supports resuming — if the script crashes, re-running it will skip
+already-processed examples and continue from where it left off.
 """
 
 import json
@@ -15,20 +18,42 @@ openrouter_token = os.getenv("OPENROUTER_TOKEN")
 base_model = os.getenv("BASE_MODEL")
 
 # Config
+MAX_SAMPLES = 10_000  # Target number of instruction examples to generate
 BASE_DELAY = 1.0  # Base seconds between API calls
-MAX_RETRIES = 3  # Maximum retries per request
+MAX_RETRIES = 3  # Maximum retries per failed request
 OUTPUT_FILE = "../data/instruct/zig_instruct_data.jsonl"
 INPUT_FILE = "../data/cleaned/zig_cleaned_data.jsonl"
 MODEL = base_model
 API_BASE_URL = "https://openrouter.ai/api/v1"
 
-
 if not openrouter_token:
     raise ValueError("OPENROUTER_TOKEN not found in environment variables")
 
+if not MODEL:
+    raise ValueError("BASE_MODEL not found in environment variables")
+
+
+def load_already_processed(output_file):
+    """Load hashes of code already written to the output file for resume support."""
+    seen = set()
+    if not os.path.exists(output_file):
+        return seen
+    with open(output_file, "r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                record = json.loads(line)
+                seen.add(record.get("code", ""))
+            except json.JSONDecodeError:
+                continue
+    print(f"Resuming — skipping {len(seen)} already processed examples.")
+    return seen
+
 
 def call_openrouter(code, max_retries=MAX_RETRIES):
-    """Generate instruction for a Zig code snippet with retry logic."""
+    """Generate instruction for a Zig code snippet with retry + exponential backoff."""
     for attempt in range(max_retries):
         try:
             response = requests.post(
@@ -63,24 +88,26 @@ def call_openrouter(code, max_retries=MAX_RETRIES):
             result = response.json()["choices"][0]["message"]["content"].strip()
             return result
         except requests.exceptions.RequestException as e:
-            wait_time = BASE_DELAY * (2**attempt)  # Exponential backoff
+            wait_time = BASE_DELAY * (2**attempt)  # Exponential backoff: 1s, 2s, 4s
             print(f"API request failed (attempt {attempt + 1}/{max_retries}): {e}")
             if attempt < max_retries - 1:
-                print(f"Retrying in {wait_time} seconds...")
+                print(f"Retrying in {wait_time:.0f}s...")
                 time.sleep(wait_time)
             else:
-                print(f"Failed after {max_retries} attempts")
+                print(f"Failed after {max_retries} attempts, skipping.")
                 return None
     return None
 
 
 def generate_instruction():
     """Generate instruction-following dataset from cleaned Zig code."""
-
-    # Create output directory if not existing
     os.makedirs(os.path.dirname(OUTPUT_FILE), exist_ok=True)
 
-    total_processed = 0
+    # Load already-processed examples to support resuming
+    already_processed = load_already_processed(OUTPUT_FILE)
+    already_done = len(already_processed)
+
+    total_skipped = 0
     total_written = 0
     total_errors = 0
 
@@ -89,6 +116,11 @@ def generate_instruction():
         open(OUTPUT_FILE, "a", encoding="utf-8") as outfile,
     ):
         for line in infile:
+            # Stop once we hit the target
+            if already_done + total_written >= MAX_SAMPLES:
+                print(f"Reached MAX_SAMPLES limit of {MAX_SAMPLES}.")
+                break
+
             line = line.strip()
             if not line:
                 continue
@@ -103,7 +135,12 @@ def generate_instruction():
             if not code:
                 continue
 
-            # Generate instruction with rate limiting
+            # Skip if already processed (resume support)
+            if code in already_processed:
+                total_skipped += 1
+                continue
+
+            # Generate instruction
             instruction = call_openrouter(code)
             if instruction is None:
                 total_errors += 1
@@ -118,19 +155,22 @@ def generate_instruction():
                 "language": data.get("language", "Zig"),
             }
             outfile.write(json.dumps(example) + "\n")
+            outfile.flush()  # Flush after every write so progress isn't lost on crash
             total_written += 1
 
-            total_processed += 1
-            if total_processed % 10 == 0:
-                print(f"Processed {total_processed} examples...")
+            if total_written % 10 == 0:
+                total_so_far = already_done + total_written
+                print(f"Progress: {total_so_far}/{MAX_SAMPLES} examples written...")
 
             # Rate limiter
             time.sleep(BASE_DELAY)
 
     print("\n=== Generation Complete ===")
-    print(f"Total processed: {total_processed}")
-    print(f"Total written: {total_written}")
-    print(f"Total errors: {total_errors}")
+    print(f"Target samples: {MAX_SAMPLES}")
+    print(f"Already done (resumed): {already_done}")
+    print(f"Newly written: {total_written}")
+    print(f"Total in output: {already_done + total_written}")
+    print(f"Errors: {total_errors}")
     print(f"Output: {OUTPUT_FILE}")
 
 
