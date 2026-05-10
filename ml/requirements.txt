@@ -14,7 +14,6 @@ transformers>=4.40.0
 trl>=0.8.6
 peft>=0.10.0
 accelerate>=0.28.0
-optimum[amd]>=1.16.0
 
 # --- Optional: 4-bit quantization (if switching back to QLoRA) ---
 # bitsandbytes>=0.43.0

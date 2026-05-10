@@ -2,10 +2,10 @@ import os
 
 import torch
 from datasets import load_dataset
-from optimum.amd import AutoModelForCausalLM
 
 # from peft import LoraConfig
 from transformers import (
+    AutoModelForCausalLM,
     AutoTokenizer,
     #    BitsAndBytesConfig,
 )
