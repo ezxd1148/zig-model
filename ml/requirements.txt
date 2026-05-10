@@ -1,6 +1,18 @@
+# --- Data Fetching (fetch_data.py) ---
 python-dotenv>=1.0.0
-pandas>=2.0.0
-datasets>=2.0.0
+datasets>=3.0.0
 huggingface-hub>=0.20.0
-bitsandbytes>=0.39.0
-accelerate>=0.20.0
+
+# --- Instruction Generation (gen_instruct.py) ---
+requests>=2.28.0
+
+# --- Training (train.py) ---
+torch>=2.0.0
+transformers>=4.40.0
+trl>=0.8.6
+peft>=0.10.0
+accelerate>=0.28.0
+optimum[amd]>=1.16.0
+
+# --- Optional: 4-bit quantization (if switching back to QLoRA) ---
+# bitsandbytes>=0.43.0

@@ -2,11 +2,12 @@ import os
 
 import torch
 from datasets import load_dataset
-from peft import LoraConfig
+from optimum.amd import AutoModelForCausalLM
+
+# from peft import LoraConfig
 from transformers import (
-    AutoModelForCausalLM,
     AutoTokenizer,
-    BitsAndBytesConfig,
+    #    BitsAndBytesConfig,
 )
 from trl import SFTConfig, SFTTrainer
 
@@ -59,7 +60,7 @@ def format_prompt(examples):
 {instruction}
 
 ### Response:
-````zig
+```zig
 {code}
 ```"""
         prompts.append(prompt)
@@ -81,6 +82,8 @@ sft_config = SFTConfig(
     learning_rate=1e-4,  # push higher to 1e-4
     # fp16=True,
     bf16=True,
+    optim="adamw_torch_fused",
+    dataloader_pin_memory=False,
     save_steps=500,
     save_total_limit=2,
     logging_steps=10,
