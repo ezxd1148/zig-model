@@ -50,7 +50,12 @@ tokenizer.pad_token = tokenizer.eos_token
 # )
 
 # model = get_peft_model(model, lora_config)
-model.print_trainable_parameters()  # Good sanity check to add
+# Sanity check — print trainable parameter count
+total_params = sum(p.numel() for p in model.parameters())
+trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+print(
+    f"Trainable params: {trainable_params:,} / {total_params:,} ({100 * trainable_params / total_params:.1f}%)"
+)
 
 
 def format_prompt(examples):
