@@ -11,8 +11,10 @@ from transformers import (
 )
 from trl import SFTConfig, SFTTrainer
 
-# temporary
 os.environ["PYTHONUTF8"] = "1"
+os.environ["PYTORCH_HIP_ALLOC_CONF"] = (
+    "expandable_segments:True"  # Reduce HIP memory fragmentation
+)
 
 dataset = load_dataset(
     "json",
@@ -34,9 +36,9 @@ model = AutoModelForCausalLM.from_pretrained(
     model_name,
     # quantization_config=bnb_config,
     dtype=torch.bfloat16,
-    device_map="auto",
+    device_map=None,  # Use None for training — device_map="auto" is for inference only
     trust_remote_code=True,
-)
+).to("cuda")
 tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
 tokenizer.pad_token = tokenizer.eos_token
 
@@ -81,9 +83,12 @@ sft_config = SFTConfig(
     dataset_text_field="text",  # Fix: tell SFT which column to use
     max_length=2048,  # renamed from max_seq_length in newer TRL
     num_train_epochs=3,
-    per_device_train_batch_size=16,  # We should push this up (2 to 16)
-    gradient_accumulation_steps=1,  # not really needed to be high (4 to 1)
-    gradient_checkpointing=True,  # saves memory during backprop
+    per_device_train_batch_size=2,  # Reduced from 16 — activations were blowing up memory
+    gradient_accumulation_steps=8,  # Effective batch size = 2 * 8 = 16, same as before
+    gradient_checkpointing=True,  # Recompute activations to save memory
+    gradient_checkpointing_kwargs={
+        "use_reentrant": False
+    },  # Required without device_map
     learning_rate=1e-4,  # push higher to 1e-4
     # fp16=True,
     bf16=True,
