@@ -33,7 +33,7 @@ model_name = "Qwen/CodeQwen1.5-7B-Chat"
 model = AutoModelForCausalLM.from_pretrained(
     model_name,
     # quantization_config=bnb_config,
-    torch_dtype=torch.float16,
+    dtype=torch.bfloat16,
     device_map="auto",
     trust_remote_code=True,
 )
@@ -79,7 +79,7 @@ OUTPUT_DIR = "../model/"
 sft_config = SFTConfig(
     output_dir=OUTPUT_DIR,
     dataset_text_field="text",  # Fix: tell SFT which column to use
-    max_seq_length=2048,  # Fix: set explicitly, don't rely on default
+    max_length=2048,  # renamed from max_seq_length in newer TRL
     num_train_epochs=3,
     per_device_train_batch_size=16,  # We should push this up (2 to 16)
     gradient_accumulation_steps=1,  # not really needed to be high (4 to 1)
