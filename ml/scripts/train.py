@@ -12,9 +12,8 @@ from transformers import (
 from trl import SFTConfig, SFTTrainer
 
 os.environ["PYTHONUTF8"] = "1"
-os.environ["PYTORCH_HIP_ALLOC_CONF"] = (
-    "expandable_segments:True"  # Reduce HIP memory fragmentation
-)
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"  # Train on GPU 1 — vLLM occupies GPU 0
+os.environ["PYTORCH_HIP_ALLOC_CONF"] = "oversize_threshold_mb:128"
 
 dataset = load_dataset(
     "json",
