@@ -12,7 +12,9 @@ from transformers import (
 from trl import SFTConfig, SFTTrainer
 
 os.environ["PYTHONUTF8"] = "1"
-os.environ["CUDA_VISIBLE_DEVICES"] = "1"  # Train on GPU 1 — vLLM occupies GPU 0
+os.environ["HIP_VISIBLE_DEVICES"] = (
+    "1"  # Train on GPU 1 — vLLM occupies GPU 0 (ROCm uses HIP_VISIBLE_DEVICES, not CUDA_VISIBLE_DEVICES)
+)
 os.environ["PYTORCH_HIP_ALLOC_CONF"] = "oversize_threshold_mb:128"
 
 dataset = load_dataset(
