@@ -2,8 +2,8 @@
 gen_instruct.py
 This script will generate instruction-following examples from the cleaned data.
 
-Supports resuming — if the script crashes, re-running it will skip
-already-processed examples and continue from where it left off.
+Supports resuming, if the script crashes, it will auto detect if the previous data is already
+processed and continue from where it left off.
 """
 
 import json
@@ -19,8 +19,9 @@ base_model = os.getenv("BASE_MODEL")
 
 # Config
 MAX_SAMPLES = 10_000  # Target number of instruction examples to generate
-BASE_DELAY = 1.0  # Base seconds between API calls
-MAX_RETRIES = 3  # Maximum retries per failed request
+BASE_DELAY = 2.0  # Base seconds between every API call
+MAX_RETRIES = 5  # Maximum retries per failed request
+RATELIMIT_WAIT = 60  # Seconds to wait on 429 before retrying
 OUTPUT_FILE = "../data/instruct/zig_instruct_data.jsonl"
 INPUT_FILE = "../data/cleaned/zig_cleaned_data.jsonl"
 MODEL = base_model
@@ -84,11 +85,23 @@ def call_openrouter(code, max_retries=MAX_RETRIES):
                 },
                 timeout=30,
             )
+
+            # Handle 429 specifically — respect Retry-After header if present
+            if response.status_code == 429:
+                retry_after = response.headers.get("Retry-After")
+                wait_time = int(retry_after) if retry_after else RATELIMIT_WAIT
+                print(
+                    f"Rate limited (429). Waiting {wait_time}s before retrying... (attempt {attempt + 1}/{max_retries})"
+                )
+                time.sleep(wait_time)
+                continue
+
             response.raise_for_status()
             result = response.json()["choices"][0]["message"]["content"].strip()
             return result
+
         except requests.exceptions.RequestException as e:
-            wait_time = BASE_DELAY * (2**attempt)  # Exponential backoff: 1s, 2s, 4s
+            wait_time = BASE_DELAY * (2**attempt)  # Exponential backoff: 2s, 4s, 8s
             print(f"API request failed (attempt {attempt + 1}/{max_retries}): {e}")
             if attempt < max_retries - 1:
                 print(f"Retrying in {wait_time:.0f}s...")
